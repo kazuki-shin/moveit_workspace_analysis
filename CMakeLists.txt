@@ -23,6 +23,7 @@ find_package(catkin REQUIRED COMPONENTS
   pluginlib
   cmake_modules
   eigen_conversions
+  moveit_visual_tools
 )
 
 find_package(Eigen REQUIRED)
@@ -60,6 +61,7 @@ add_dependencies(moveit_workspace_analysis ${catkin_EXPORTED_TARGETS})
 
 add_executable(workspace_analysis_node src/main.cpp)
 add_executable(workspace_reader_node src/reader.cpp)
+add_executable(execute_analysis_node src/execute_analysis.cpp)
 
 target_link_libraries(moveit_workspace_analysis
   ${catkin_LIBRARIES} ${Boost_LIBRARIES})
@@ -68,6 +70,8 @@ target_link_libraries(workspace_analysis_node
   moveit_workspace_analysis ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 target_link_libraries(workspace_reader_node
   moveit_workspace_analysis ${catkin_LIBRARIES} ${Boost_LIBRARIES})
+  target_link_libraries(execute_analysis_node
+  moveit_workspace_analysis ${catkin_LIBRARIES} ${Boost_LIBRARIES})
 
 
 install(
@@ -75,6 +79,7 @@ install(
     moveit_workspace_analysis
     workspace_analysis_node
     workspace_reader_node
+    execute_analysis_node
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})

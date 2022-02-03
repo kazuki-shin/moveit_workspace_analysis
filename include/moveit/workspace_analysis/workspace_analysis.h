@@ -45,8 +45,6 @@
 #include <moveit/kinematics_metrics/kinematics_metrics.h>
 #include <moveit_msgs/WorkspaceParameters.h>
 #include <moveit/planning_scene/planning_scene.h>
-#include <moveit/move_group_interface/move_group_interface.h>
-#include <moveit/planning_scene_interface/planning_scene_interface.h>
 
 namespace moveit_workspace_analysis
 {
