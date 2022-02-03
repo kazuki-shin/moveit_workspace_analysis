@@ -431,9 +431,9 @@ visualization_msgs::Marker WorkspaceMetrics::getDensityMarker(double marker_scal
     
     if(smooth_colors)
     {
-      color.g = scale<0.5?2*scale:1.0;
-      color.r = scale<0.5?1.0:1.0-2*(scale-0.5);
-      color.b = scale<0.5?0.0:1.0-color.r;
+      // color.g = scale<0.5?2*scale:1.0;
+      // color.r = scale<0.5?1.0:1.0-2*(scale-0.5);
+      // color.b = scale<0.5?0.0:1.0-color.r;
 
       //blue
       // color.g = scale<0.5?2*scale:1.0;
@@ -441,9 +441,9 @@ visualization_msgs::Marker WorkspaceMetrics::getDensityMarker(double marker_scal
       // color.r = scale<0.5?0.0:1.0-color.b;
       
       // green 
-      // color.g = scale<0.5?1.0:1.0-2*(scale-0.5);
-      // color.r = scale<0.5?0.0:1.0-color.g;
-      // color.b = scale<0.5?2*scale:1.0;
+      color.g = scale<0.5?1.0:1.0-2*(scale-0.5);
+      color.r = scale<0.5?0.0:1.0-color.g;
+      color.b = scale<0.5?2*scale:1.0;
     }
     else
     {
