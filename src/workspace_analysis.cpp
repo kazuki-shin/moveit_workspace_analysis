@@ -275,9 +275,10 @@ bool WorkspaceMetrics::writeToFile(const std::string &filename, const std::strin
       file << group_name_ << std::endl;
       file << frame_id_ << std::endl;
     }
+    geometry_msgs::Pose prev_pose;
     for(std::size_t i=0; i < points_.size(); ++i)
     {
-      if(joint_values_[i].empty())
+      if(joint_values_[i].empty() || points_[i].position == prev_pose.position)
         continue;
       file << points_[i].position.x << delimiter << points_[i].position.y << delimiter << points_[i].position.z << delimiter;
       file << points_[i].orientation.x << delimiter << points_[i].orientation.y  << delimiter << points_[i].orientation.z << delimiter << points_[i].orientation.w << delimiter;
@@ -285,6 +286,7 @@ bool WorkspaceMetrics::writeToFile(const std::string &filename, const std::strin
         file << joint_values_[i][j] << delimiter;
       file << manipulability_[i] << delimiter << min_distance_joint_limits_[i] << delimiter << min_distance_joint_limit_index_[i] << std::endl;
       //file << manipulability_[i] << delimiter << min_distance_joint_limits_[i] << std::endl;
+      prev_pose = points_[i];
     }
   }
   file.close();
