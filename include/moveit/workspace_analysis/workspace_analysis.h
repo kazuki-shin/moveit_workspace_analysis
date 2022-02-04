@@ -106,6 +106,7 @@ public:
 
   WorkspaceMetrics computeMetricsFK(robot_state::RobotState *joint_state,
                                     const robot_model::JointModelGroup *joint_model_group,
+                                    const std::vector<std::vector<double>> &joint_values,
                                     unsigned int max_attempts,
                                     const ros::WallDuration &max_duration,
                                     const std::map<std::string, std::vector<double> > &fixed_joint_values = std::map<std::string, std::vector<double> >()) const;

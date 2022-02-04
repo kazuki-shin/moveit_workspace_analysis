@@ -95,8 +95,8 @@ int main(int argc, char **argv)
     
     move_group.setMaxVelocityScalingFactor(1);
     move_group.setMaxAccelerationScalingFactor(1);
-    // move_group.setPlanningTime(5);
-    // move_group.setNumPlanningAttempts(5);
+    move_group.setPlanningTime(10);
+    move_group.setNumPlanningAttempts(30);
     move_group.setJointValueTarget(joint_values);
     // move_group.setPoseTarget(pose);
 

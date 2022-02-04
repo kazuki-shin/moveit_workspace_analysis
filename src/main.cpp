@@ -130,45 +130,53 @@ int main(int argc, char **argv)
   /* Compute the metrics */
   ROS_INFO("Finished analysis.");
 
-  // load the set of quaternions
-  std::vector<geometry_msgs::Quaternion> orientations;
-  std::ifstream quat_file;
-  quat_file.open(quat_filename.c_str());
+  // load the set of joint values
+  std::vector<std::vector<double>> joint_values;
+  std::ifstream jv_file;
+  jv_file.open(quat_filename.c_str());
   ROS_INFO(quat_filename.c_str());
-  while(!quat_file.eof())
+  int count = 0;
+  while(!jv_file.eof())
   {
     std::string curr_quad_string;
-    getline(quat_file, curr_quad_string, '\n');
+    getline(jv_file, curr_quad_string, '\n');
+    if(curr_quad_string.empty())
+      break;
     std::istringstream iss(curr_quad_string);
 
-    geometry_msgs::Quaternion temp_quat;
-    for(int quat_idx = 0; quat_idx < 4; quat_idx++){
+    std::vector<double> joints;
+    for(int joint_idx = 0; joint_idx < 6; joint_idx++){
         std::string subs;
         iss >> subs;
-        ROS_INFO_STREAM("subs: " << subs); 
-        if(quat_idx == 0)
-          temp_quat.x = std::stof(subs);
-        else if(quat_idx == 1)
-          temp_quat.y = std::stof(subs);
-        else if(quat_idx == 2)
-          temp_quat.z = std::stof(subs);
-        else
-          temp_quat.w = std::stof(subs);
+        joints.push_back(std::stof(subs));
     }
-        
-    orientations.push_back(temp_quat);
-    ROS_INFO_STREAM("Quat: " << temp_quat); 
+    if(count % 1000000 == 0)
+      ROS_INFO_STREAM("Joint vals: " 
+                        << joints[0] << " " 
+                        << joints[1] << " " 
+                        << joints[2] << " " 
+                        << joints[3] << " " 
+                        << joints[4] << " " 
+                        << joints[5]
+      );
+       
+    // if(count != 0 && count % 30000 == 0)
+    //   break;
+
+    joint_values.push_back(joints);
+    ++count;
   }
-  
+  ROS_INFO_STREAM(joint_values.size());
+
   ros::Time init_time;
   init_time = ros::Time::now();
   ROS_INFO("Starting Compute");
 
   ros::Duration(5).sleep();
-  moveit_workspace_analysis::WorkspaceMetrics metrics = workspace_analysis.computeMetrics(workspace, orientations, robot_state.get(), joint_model_group, res_x, res_y, res_z);
+  // moveit_workspace_analysis::WorkspaceMetrics metrics = workspace_analysis.computeMetrics(workspace, orientations, robot_state.get(), joint_model_group, res_x, res_y, res_z);
   
-  // ros::WallDuration duration(100.0);
-  // moveit_workspace_analysis::WorkspaceMetrics metrics = workspace_analysis.computeMetricsFK(&(*robot_state), joint_model_group, max_attempts, duration);
+  ros::WallDuration duration(100.0);
+  moveit_workspace_analysis::WorkspaceMetrics metrics = workspace_analysis.computeMetricsFK(&(*robot_state), joint_model_group, joint_values, max_attempts, duration);
 
   ROS_INFO("Done with computing.");
 

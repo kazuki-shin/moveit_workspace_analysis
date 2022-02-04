@@ -38,6 +38,11 @@
 #include <eigen_conversions/eigen_msg.h>
 #include <fstream>
 #include <iostream>
+#include <moveit/collision_detection_bullet/collision_env_bullet.h>
+#include <moveit/collision_detection_bullet/collision_detector_allocator_bullet.h>
+#include <moveit/robot_model/robot_model.h>
+#include <moveit/robot_state/robot_state.h>
+#include <moveit/planning_scene/planning_scene.h>
 
 #define NUM_QUATERNIONS 101.0
 
@@ -174,6 +179,7 @@ WorkspaceMetrics WorkspaceAnalysis::computeMetrics(const moveit_msgs::WorkspaceP
 
 WorkspaceMetrics WorkspaceAnalysis::computeMetricsFK(robot_state::RobotState *joint_state,
                                                      const robot_model::JointModelGroup *joint_model_group,
+                                                     const std::vector<std::vector<double>> &joint_values,
                                                      unsigned int max_attempts,
                                                      const ros::WallDuration &max_duration,
                                                      const std::map<std::string, std::vector<double> > &fixed_joint_values) const
@@ -185,17 +191,7 @@ WorkspaceMetrics WorkspaceAnalysis::computeMetricsFK(robot_state::RobotState *jo
     ROS_ERROR("Joint state group and planning scene should not be null");
     return metrics;
   }
-  if(!fixed_joint_values.empty())
-  {
-    for(std::map<std::string, std::vector<double> >::const_iterator iter=fixed_joint_values.begin(); iter != fixed_joint_values.end(); ++iter)
-    {
-      if(!joint_model_group->hasJointModel((*iter).first))
-      {
-        ROS_ERROR("Could not find joint: %s in joint group: %s", (*iter).first.c_str(), joint_model_group->getName().c_str());
-        return metrics;
-      }
-    }
-  }
+
   metrics.group_name_ = joint_model_group->getName();
   metrics.robot_name_ = joint_state->getRobotModel()->getName();
   metrics.frame_id_ =  joint_state->getRobotModel()->getModelFrame();
@@ -207,28 +203,35 @@ WorkspaceMetrics WorkspaceAnalysis::computeMetricsFK(robot_state::RobotState *jo
   //Find end-effector link
   std::string link_name = joint_model_group->getLinkModelNames().back();
   const robot_state::LinkModel *link_model = joint_state->getLinkModel(link_name);
-  ROS_INFO_STREAM("Link Name: " << link_name);
 
-  for(std::size_t i=0; i < max_attempts; ++i)
+  int count = 0;
+  for(int i=0; i < joint_values.size(); ++i)
   {
-    if(!ros::ok() || canceled_ || (ros::WallTime::now()-start_time) >= max_duration)
+    if(!ros::ok() || canceled_)
       return metrics;
-    joint_state->setToRandomPositions(joint_model_group);
-    if(!fixed_joint_values.empty())
-    {
-      for(std::map<std::string, std::vector<double> >::const_iterator iter=fixed_joint_values.begin(); iter != fixed_joint_values.end(); ++iter)
-      {
-        joint_state->setJointPositions((*iter).first, (*iter).second);
-        joint_state->update();
-      }
-    }
+    std::vector<double> state = joint_values[i];
+    joint_state->setJointGroupPositions(joint_model_group, state);
+    joint_state->update();
+
     if(planning_scene_->isStateColliding(*joint_state, joint_model_group->getName()))
       continue;
+
+    if(count % 100000 == 0)
+      ROS_INFO_STREAM("Joint vals: " 
+                        << state[0] << " " 
+                        << state[1] << " " 
+                        << state[2] << " " 
+                        << state[3] << " " 
+                        << state[4] << " " 
+                        << state[5]
+      );
+
     const Eigen::Affine3d &link_pose = joint_state->getGlobalLinkTransform(link_model);
     geometry_msgs::Pose pose;
     tf::poseEigenToMsg(link_pose,pose);
     metrics.points_.push_back(pose);
     updateMetrics(joint_state, joint_model_group, metrics);
+    ++count;
   }
   return metrics;
 }
@@ -278,8 +281,8 @@ bool WorkspaceMetrics::writeToFile(const std::string &filename, const std::strin
     geometry_msgs::Pose prev_pose;
     for(std::size_t i=0; i < points_.size(); ++i)
     {
-      if(joint_values_[i].empty() || points_[i].position == prev_pose.position)
-        continue;
+      // if(joint_values_[i].empty() || points_[i].position == prev_pose.position)
+      //   continue;
       file << points_[i].position.x << delimiter << points_[i].position.y << delimiter << points_[i].position.z << delimiter;
       file << points_[i].orientation.x << delimiter << points_[i].orientation.y  << delimiter << points_[i].orientation.z << delimiter << points_[i].orientation.w << delimiter;
       for(std::size_t j=0; j < joint_values_[i].size(); ++j)

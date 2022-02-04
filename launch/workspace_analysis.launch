@@ -39,7 +39,7 @@
 
       <!-- result file parameter -->
       <param name="filename" value="$(find moveit_workspace_analysis)/$(arg file)" />
-      <param name="quat_filename" value="$(find moveit_workspace_analysis)/quaternions/data_simple.txt" />
+      <param name="quat_filename" value="$(find moveit_workspace_analysis)/src/jointsearchspace5_split1of100.txt" />
 
     </node>
   </group>
